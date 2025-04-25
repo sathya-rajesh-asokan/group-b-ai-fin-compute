@@ -30,8 +30,8 @@ def get_stock_data(_ticker,_start_date,_end_date):
     params = {}
     params['apikey'] = api_key
     params['symbol'] = _ticker
-    params['from'] = _start_date
-    params['to'] = _end_date
+    params['from'] = _start_date.strftime('%Y-%m-%d')
+    params['to'] = _end_date.strftime('%Y-%m-%d')
 
     fmp_response=requests.get(end_point, params=params)
 
