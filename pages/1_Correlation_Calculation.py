@@ -68,18 +68,15 @@ merged_data2 = merged_data2.rename(columns={'measure_y': 'measure'})
 merged_data1 = merged_data1.ffill()
 merged_data2 = merged_data2.ffill()
 
-# Calculate daily returns (percent change)
-# Note: This is a simple way to calculate returns, but you might want to consider using log returns for more accuracy in financial applications.
-# Reshape the data to 2D arrays before scaling
+scaler = StandardScaler()
+returns1 = scaler.fit_transform(merged_data1.values.reshape(-1, 1)).flatten()
+returns1 = pd.DataFrame(returns1, columns=merged_data1.columns, index=merged_data1.index)
+
 if 'Adjusted Close Price' == findCorrelationFor:
-    scaler = StandardScaler()
-    returns1 = scaler.fit_transform(merged_data1.values.reshape(-1, 1)).flatten()
-    returns1 = pd.DataFrame(returns1, columns=merged_data1.columns, index=merged_data1.index)
     returns2 = scaler.fit_transform(merged_data2.values.reshape(-1, 1)).flatten()
     returns2 = pd.DataFrame(returns2, columns=merged_data2.columns, index=merged_data2.index)
 elif 'Price Change' == findCorrelationFor:
-    returns1 = np.log(merged_data1 / merged_data1.shift(1)).dropna()
-    returns2 = np.log(merged_data2 / merged_data2.shift(1)).dropna()
+    returns2 = np.log(merged_data2 / merged_data2.shift(1)).fillna(0)
 
 
 # Calculate correlation coefficient
