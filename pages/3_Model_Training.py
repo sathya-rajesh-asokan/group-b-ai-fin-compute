@@ -245,7 +245,7 @@ st.write(f"RMSE (Lasso): {rmse_lasso:.4f}")
 
 # Backtesting for Model Robustness
 # Sliding Window Approach
-window_size = 100  # Define the size of the rolling window
+window_size = 30  # Define the size of the rolling window
 predictions = []
 actual_prices = []
 
