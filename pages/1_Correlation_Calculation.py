@@ -92,7 +92,6 @@ plt.title(f'{ticker1} vs {ticker2} Daily Returns Correlation\n'
 plt.xlabel(f'{ticker1} Daily Returns')
 plt.ylabel(f'{ticker2} Daily Returns')
 
-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
 # Add regression line
 m, b = np.polyfit(returns1['measure'], returns2['measure'], 1)
 plt.plot(returns1, m*returns1 + b, color='red')
