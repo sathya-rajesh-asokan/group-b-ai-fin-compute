@@ -54,12 +54,14 @@ def get_stock_data(_ticker,_start_date,_end_date, _metric):
 
     return df
 
-x_ticker = {'ticker': '300750.SZ', 'measure':'Adjusted Close Price'}
+x_ticker = {'ticker': '300750.SZ', 'measure':'Adjusted Close Price', 'datasource':'FMP'}
 
-y_tickers = [{'ticker':'1211.HK','measure':'Adjusted Close Price'}]
+y_tickers = [{'ticker':'1211.HK','measure':'Adjusted Close Price', 'datasource':'FMP'}]
+
+y_tickers.append({'ticker':'000001.SZ','measure':'Adjusted Close Price', 'datasource':'YFinance'})
 # Set up the time period (last 1 year by default)
 end_date = datetime.now()
-start_date = end_date - timedelta(days=30)
+start_date = end_date - timedelta(days=90)
 
 modeling_base_data = get_stock_data(x_ticker['ticker'], start_date, end_date, x_ticker['measure'])
 
@@ -69,6 +71,7 @@ for ticker in y_tickers:
     modeling_base_data = pd.merge(modeling_base_data, ticker_data, left_index=True, right_index=True, how='left')
     if ticker['measure'] == 'Adjusted Close Price':
         modeling_base_data[ticker['ticker'] + '_adjClose'] = modeling_base_data[ticker['ticker'] + '_adjClose'].ffill()
+        modeling_base_data[ticker['ticker'] + '_adjClose'] = modeling_base_data[ticker['ticker'] + '_adjClose'].fillna(0)
     if ticker['measure'] == 'Volume':
         modeling_base_data[ticker['ticker'] + '_volume'] = modeling_base_data[ticker['ticker'] + '_volume'].fillna(0)
 
@@ -97,13 +100,13 @@ plt.legend()
 st.pyplot(plt)
 
 # Moving Averages
-for i in [3, 10, 20]:
+for i in [3, 10]:
   modeling_base_data[x_ticker['ticker'] + '_' + str(i) + 'MA'] = modeling_base_data[x_ticker['ticker'] + '_adjClose'].rolling(window=i).mean().bfill()
 
 plt.figure(figsize=(12, 6))
 plt.plot(modeling_base_data[x_ticker['ticker'] + '_adjClose'], label=x_ticker['ticker'] + '_adjClose', color='blue')
 
-for i in [3, 10, 20]:
+for i in [3, 10]:
   plt.plot(modeling_base_data[x_ticker['ticker'] + '_' + str(i) + 'MA'], label=x_ticker['ticker'] + '_' + str(i) + 'MA')
 plt.title("300750.SZ Scaled Adjusted Closing Price with Moving Averages")
 plt.xlabel("Date")
@@ -163,9 +166,9 @@ def calculate_bollinger_bands(data, window=20, std_dev=2):
     lower_band = rolling_mean - (rolling_std * std_dev)
     return upper_band, lower_band
 
-modeling_base_data[f"{x_ticker['ticker']}_RSI"] = calculate_rsi(modeling_base_data[f"{x_ticker['ticker']}_adjClose"]).bfill()
-modeling_base_data[f"{x_ticker['ticker']}_BB_Upper"], modeling_base_data[f"{x_ticker['ticker']}_BB_Lower"] = calculate_bollinger_bands(modeling_base_data[f"{x_ticker['ticker']}_adjClose"])
-modeling_base_data[f"{x_ticker['ticker']}_BB_Upper"], modeling_base_data[f"{x_ticker['ticker']}_BB_Lower"] = modeling_base_data[f"{x_ticker['ticker']}_BB_Upper"], modeling_base_data[f"{x_ticker['ticker']}_BB_Lower"].bfill()
+#modeling_base_data[f"{x_ticker['ticker']}_RSI"] = calculate_rsi(modeling_base_data[f"{x_ticker['ticker']}_adjClose"]).bfill()
+#modeling_base_data[f"{x_ticker['ticker']}_BB_Upper"], modeling_base_data[f"{x_ticker['ticker']}_BB_Lower"] = calculate_bollinger_bands(modeling_base_data[f"{x_ticker['ticker']}_adjClose"])
+#modeling_base_data[f"{x_ticker['ticker']}_BB_Upper"], modeling_base_data[f"{x_ticker['ticker']}_BB_Lower"] = modeling_base_data[f"{x_ticker['ticker']}_BB_Upper"], modeling_base_data[f"{x_ticker['ticker']}_BB_Lower"].bfill()
 for i in range(1, 6):  # Creating lagged features for up to 5 days
     modeling_base_data[f"{x_ticker['ticker']}_Lagged_adjClose_{i}_days"] = modeling_base_data[f"{x_ticker['ticker']}_adjClose"].shift(i).bfill()
 
@@ -174,9 +177,9 @@ for i in range(1, 6):  # Creating lagged features for up to 5 days
 # Lagged Features (Past Prices)
 for ticker in y_tickers:
     if ticker['measure'] == 'Adjusted Close Price':
-        modeling_base_data[f"{ticker['ticker']}_RSI"] = calculate_rsi(modeling_base_data[f"{ticker['ticker']}_adjClose"]).bfill()
-        modeling_base_data[f"{ticker['ticker']}_BB_Upper"], modeling_base_data[f"{ticker['ticker']}_BB_Lower"] = calculate_bollinger_bands(modeling_base_data[f"{ticker['ticker']}_adjClose"])
-        modeling_base_data[f"{ticker['ticker']}_BB_Upper"], modeling_base_data[f"{ticker['ticker']}_BB_Lower"] = modeling_base_data[f"{ticker['ticker']}_BB_Upper"], modeling_base_data[f"{ticker['ticker']}_BB_Lower"].bfill()
+        #modeling_base_data[f"{ticker['ticker']}_RSI"] = calculate_rsi(modeling_base_data[f"{ticker['ticker']}_adjClose"]).bfill()
+        #modeling_base_data[f"{ticker['ticker']}_BB_Upper"], modeling_base_data[f"{ticker['ticker']}_BB_Lower"] = calculate_bollinger_bands(modeling_base_data[f"{ticker['ticker']}_adjClose"])
+        #modeling_base_data[f"{ticker['ticker']}_BB_Upper"], modeling_base_data[f"{ticker['ticker']}_BB_Lower"] = modeling_base_data[f"{ticker['ticker']}_BB_Upper"], modeling_base_data[f"{ticker['ticker']}_BB_Lower"].bfill()
         for i in range(1, 6):  # Creating lagged features for up to 5 days
             modeling_base_data[f"{ticker['ticker']}_Lagged_adjClose_{i}_days"] = modeling_base_data[f"{ticker['ticker']}_adjClose"].shift(i).bfill()
 
@@ -184,6 +187,7 @@ modeling_base_data['Day_of_Week'] = modeling_base_data.index.dayofweek
 modeling_base_data['Month'] = modeling_base_data.index.month
 modeling_base_data['Year'] = modeling_base_data.index.year
 
+modeling_base_data.dropna(inplace=True)
 
 target = modeling_base_data[f"{x_ticker['ticker'] + '_adjClose'}"].shift(-1).ffill()
 
@@ -245,7 +249,7 @@ st.write(f"RMSE (Lasso): {rmse_lasso:.4f}")
 
 # Backtesting for Model Robustness
 # Sliding Window Approach
-window_size = 30  # Define the size of the rolling window
+window_size = 3  # Define the size of the rolling window
 predictions = []
 actual_prices = []
 
