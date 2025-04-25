@@ -39,6 +39,8 @@ def get_stock_data(_ticker,_start_date,_end_date):
     df = pd.DataFrame(fmp_response.json())
 
     # I am setting the index to date, so as to be able to calcualte pct change and join
+    df['date'] = pd.to_datetime(df['date'], format='%Y-%m-%d')  # N
+    # I am setting the index to date, so as to be able to calcualte pct change and join
     df.set_index('date', inplace=True, drop=True)
 
     if 'Adjusted Close Price' == findCorrelationFor or 'Price Change' == findCorrelationFor:
