@@ -19,6 +19,8 @@ from transformers import BertTokenizer, BertForSequenceClassification
 from tqdm import tqdm
 from sklearn.preprocessing import MinMaxScaler
 
+import pathlib
+st.write(pathlib.Path('.'))
 #open browser
 
 options = Options()
