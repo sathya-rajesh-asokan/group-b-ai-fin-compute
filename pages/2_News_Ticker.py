@@ -40,7 +40,7 @@ for option in HEADLESS_OPTIONS:
 service = Service(shutil.which('chromedriver'))
 
     # Initialize the WebDriver
-driver = webdriver.Chrome()
+driver = webdriver.Chrome(service=service, options=options)
 
 
 base_url = "https://wallstreetcn.com/search"
