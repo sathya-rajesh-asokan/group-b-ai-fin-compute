@@ -76,7 +76,7 @@ def get_stock_data(_ticker,_start_date,_end_date, _metric):
 end_date = datetime.now()
 start_date = end_date - timedelta(days=30)
 
-modeling_base_data = get_stock_data('CATL', start_date, end_date, 'Adjusted Close Price')
+modeling_base_data = get_stock_data('300750.SZ', start_date, end_date, 'Adjusted Close Price')
 
 
 base_url = "https://wallstreetcn.com/search"
