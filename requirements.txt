@@ -9,3 +9,4 @@ selenium
 torch
 transformers
 bs4
+ta
