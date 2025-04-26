@@ -177,6 +177,7 @@ last_current_date = modeling_base_data.index[0]
 st.write(f"Predicting From: {last_current_date}")
 
 for eachDay in range(1, iterations_to_predict + 1):
+
     prediction_features = prediction_total_data.drop(columns=[f"{x_ticker['ticker'] + '_adjClose'}"], errors='ignore')
 
     latest_data = prediction_features.iloc[0]
@@ -191,11 +192,11 @@ for eachDay in range(1, iterations_to_predict + 1):
     new_row['date'] = pd.to_datetime(new_row.index, format='%Y-%m-%d %H:%M:%S')  #
     new_row.set_index('date', inplace=True, drop=True)
 
-
     for ticker in y_tickers:
         if ticker['measure'] == 'Adjusted Close Price':
             daily_increase = ticker['change'] / iterations_to_predict
             new_row[ticker['ticker'] + '_adjClose'] = latest_data[ticker['ticker'] + '_adjClose'] * (1 + (daily_increase)/100)
+
 
 
     prediction_total_data = pd.concat([prediction_total_data, new_row], axis=0)
@@ -229,7 +230,6 @@ for eachDay in range(1, iterations_to_predict + 1):
     prediction_total_data['Day_of_Week'] = prediction_total_data.index.dayofweek
     prediction_total_data['Month'] = prediction_total_data.index.month
     prediction_total_data['Year'] = prediction_total_data.index.year
-
 
 # Later, to inverse transform only those columns
 final_chart_data = prediction_total_data[f"{x_ticker['ticker']}_adjClose"]
