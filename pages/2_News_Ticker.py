@@ -18,12 +18,18 @@ from selenium.webdriver.chrome.options import Options
 from transformers import BertTokenizer, BertForSequenceClassification
 from tqdm import tqdm
 from sklearn.preprocessing import MinMaxScaler
+import shutil
 
 #open browser
-
-import os
-
-os.chmod("./chromedriver_remote", 0o755)
+options = Options()
+options.add_argument("--headless")
+options.add_argument("--no-sandbox")
+options.add_argument("--disable-dev-shm-usage")
+options.add_argument("--disable-gpu")
+options.add_argument("--disable-features=NetworkService")
+options.add_argument("--window-size=1920x1080")
+options.add_argument("--disable-features=VizDisplayCompositor")
+options.add_argument('--ignore-certificate-errors')
 
 options = Options()
 
@@ -31,10 +37,10 @@ HEADLESS_OPTIONS = [ "--headless=new","--disable-gpu", "--disable-dev-shm-usage"
 for option in HEADLESS_OPTIONS:
   options.add_argument(option)
 
-service = Service(r"./chromedriver_remote")
+service = Service(shutil.which('chromedriver'))
 
     # Initialize the WebDriver
-driver = webdriver.Chrome(service=service, options=options)
+driver = webdriver.Chrome()
 
 
 base_url = "https://wallstreetcn.com/search"
