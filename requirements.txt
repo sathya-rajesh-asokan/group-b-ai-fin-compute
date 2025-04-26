@@ -5,3 +5,7 @@ matplotlib
 streamlit
 scikit-learn
 seaborn
+selenium
+torch
+transformers
+bs4
