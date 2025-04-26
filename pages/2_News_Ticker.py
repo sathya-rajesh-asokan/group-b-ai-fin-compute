@@ -43,6 +43,42 @@ service = Service(shutil.which('chromedriver'))
 driver = webdriver.Chrome(service=service, options=options)
 
 
+def get_stock_data(_ticker,_start_date,_end_date, _metric):
+    end_point='https://financialmodelingprep.com/stable/historical-price-eod/dividend-adjusted'
+    api_key='4ZTUtST6urFlN83a1LDFy6U7plAHhegP'
+
+    params = {}
+    params['apikey'] = api_key
+    params['symbol'] = _ticker
+    params['from'] = _start_date.strftime('%Y-%m-%d')
+    params['to'] = _end_date.strftime('%Y-%m-%d')
+
+    fmp_response=requests.get(end_point, params=params)
+
+    # Convert JSON to Dataframes
+    df = pd.DataFrame(fmp_response.json())
+
+    # I am setting the index to date, so as to be able to calcualte pct change and join
+    df['date'] = pd.to_datetime(df['date'], format='%Y-%m-%d')  #
+    df.set_index('date', inplace=True, drop=True)
+
+    df = df.drop(columns=['symbol'], errors='ignore')
+
+    df.columns = [_ticker + '_' + col for col in df.columns.values]
+
+    if 'Adjusted Close Price' == _metric:
+        df = df[[_ticker + '_adjClose']]
+    else:
+        return df
+
+    return df
+
+end_date = datetime.now()
+start_date = end_date - timedelta(days=30)
+
+modeling_base_data = get_stock_data('CATL', start_date, end_date, 'Adjusted Close Price')
+
+
 base_url = "https://wallstreetcn.com/search"
 params = "?q=宁德时代"
 try:
@@ -104,8 +140,10 @@ for i in range (0,numbers_items):
     collection.append(product_item)
 
 df_collection = pd.DataFrame(data=collection, columns=['Ticker','Date','News'])
-st.title("News Ticker")
-st.subheader("Latest News")
+
+df_collection['date'] = pd.to_datetime(df_collection['Date'], format='%Y-%m-%d')  #
+df_collection.set_index('date', inplace=True, drop=True)
+df_collection.drop(columns=['Date'], inplace=True, errors='ignore')
 
 def analyze_sentiment(news_df):
     """Perform sentiment analysis with offline fallback"""
@@ -139,3 +177,6 @@ def analyze_sentiment(news_df):
 
 sentiment_df = analyze_sentiment(df_collection)
 st.dataframe(sentiment_df)
+
+st.title("News Ticker")
+st.subheader("Latest News")
