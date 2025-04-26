@@ -21,6 +21,10 @@ from sklearn.preprocessing import MinMaxScaler
 
 #open browser
 
+import os
+
+os.chmod("./chromedriver_remote", 0o755)
+
 options = Options()
 
 HEADLESS_OPTIONS = [ "--headless=new","--disable-gpu", "--disable-dev-shm-usage","--window-size=1920,1080","--disable-search-engine-choice-screen"]
