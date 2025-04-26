@@ -234,8 +234,8 @@ y_pred_lasso = lasso_model.predict(X_test.values)
 rmse_ridge = np.sqrt(mean_squared_error(y_test, y_pred_ridge))
 rmse_lasso = np.sqrt(mean_squared_error(y_test, y_pred_lasso))
 
-st.write(f"RMSE (Ridge): {rmse_ridge:.4f}")
-st.write(f"RMSE (Lasso): {rmse_lasso:.4f}")
+#st.write(f"RMSE (Ridge): {rmse_ridge:.4f}")
+#st.write(f"RMSE (Lasso): {rmse_lasso:.4f}")
 
 # Backtesting for Model Robustness
 # Sliding Window Approach
