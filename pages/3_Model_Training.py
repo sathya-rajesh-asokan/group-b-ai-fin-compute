@@ -141,7 +141,7 @@ if 'RSI' in internal_features:
   modeling_base_data[f"{x_ticker['ticker']}_RSI"] = calculate_rsi(modeling_base_data[f"{x_ticker['ticker']}_adjClose"]).bfill()
 elif 'Bollinger Bands' in internal_features:
   modeling_base_data[f"{x_ticker['ticker']}_BB_Upper"], modeling_base_data[f"{x_ticker['ticker']}_BB_Lower"] = calculate_bollinger_bands(modeling_base_data[f"{x_ticker['ticker']}_adjClose"])
-  modeling_base_data[f"{x_ticker['ticker']}_BB_Upper"], modeling_base_data[f"{x_ticker['ticker']}_BB_Lower"] = modeling_base_data[f"{x_ticker['ticker']}_BB_Upper"], modeling_base_data[f"{x_ticker['ticker']}_BB_Lower"].bfill()
+  modeling_base_data[f"{x_ticker['ticker']}_BB_Upper"], modeling_base_data[f"{x_ticker['ticker']}_BB_Lower"] = modeling_base_data[f"{x_ticker['ticker']}_BB_Upper"], modeling_base_data[f"{x_ticker['ticker']}_BB_Lower"].ffill()
 if '5 Day Lagged Price' in internal_features:
   for i in range(1, 6):  # Creating lagged features for up to 5 days
     modeling_base_data[f"{x_ticker['ticker']}_Lagged_adjClose_{i}_days"] = modeling_base_data[f"{x_ticker['ticker']}_adjClose"].shift(i).bfill()
@@ -153,7 +153,7 @@ for ticker in y_tickers:
           modeling_base_data[f"{ticker['ticker']}_RSI"] = calculate_rsi(modeling_base_data[f"{ticker['ticker']}_adjClose"]).bfill()
         elif 'Bollinger Bands' in internal_features:
           modeling_base_data[f"{ticker['ticker']}_BB_Upper"], modeling_base_data[f"{ticker['ticker']}_BB_Lower"] = calculate_bollinger_bands(modeling_base_data[f"{ticker['ticker']}_adjClose"])
-          modeling_base_data[f"{ticker['ticker']}_BB_Upper"], modeling_base_data[f"{ticker['ticker']}_BB_Lower"] = modeling_base_data[f"{ticker['ticker']}_BB_Upper"], modeling_base_data[f"{ticker['ticker']}_BB_Lower"].bfill()
+          modeling_base_data[f"{ticker['ticker']}_BB_Upper"], modeling_base_data[f"{ticker['ticker']}_BB_Lower"] = modeling_base_data[f"{ticker['ticker']}_BB_Upper"], modeling_base_data[f"{ticker['ticker']}_BB_Lower"].ffill()
         if '5 Day Lagged Price' in internal_features:
           for i in range(1, 6):  # Creating lagged features for up to 5 days
             modeling_base_data[f"{ticker['ticker']}_Lagged_adjClose_{i}_days"] = modeling_base_data[f"{ticker['ticker']}_adjClose"].shift(i).bfill()
