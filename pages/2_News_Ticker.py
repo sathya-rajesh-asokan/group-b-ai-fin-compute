@@ -186,68 +186,6 @@ sentiment_df = analyze_sentiment(df_collection)
 
 empty_block.dataframe(sentiment_df)
 
-
-#Additional news
-base_url = 'https://insideevs.com/search/?q=catl&f=all'
-
-# open browser
-driver = webdriver.Chrome()
-
-try:
-    driver.get(base_url)     # First load without parameters to get past initial checks
-    time.sleep(5)
-
-    # Wait for content to load
-    WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located((By.CSS_SELECTOR, ".content")))
-
-    # Verify the current url contains our key parameter
-    current_url = driver.current_url
-    last_height = driver.execute_script("return document.body.scrollHeight")
-
-    while True:
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")  # scroll down to bottom of page
-        time.sleep(2)  # wait for page to load
-        new_height = driver.execute_script("return document.body.scrollHeight")   #calculate the new height after scroll
-
-        if new_height == last_height:   # if new_height = last_height, stop scrolling
-            break
-
-        last_height = new_height
-
-except Exception as e:
-    print("Error:", str(e))
-
-finally:
-    # parse HTML content
-    fullpage = bs(driver.page_source, "html.parser")
-    news_section = fullpage.findAll("div", class_="@container/item-grid")
-
-def get_CATL_news(i):  # get headline and date
-    item = news_section[i]
-    headline = item.find("h2", class_="compact-title-medium").a.text.strip()   # Extract headline
-    date = item.find("span", class_="m1-item__meta-date").time.text.strip()   # Extract date
-
-    clean_date = convert_to_date_format(date)
-    print (clean_date)
-    return ['CATL', clean_date, headline]
-
-# Loop through all articles and print results
-for i in range(len(news_section)):
-    print(get_CATL_news(i))  # Call the function with index i
-
-driver.quit()
-
-df_collection = pd.DataFrame(
-    data=[get_CATL_news(i) for i in range(len(news_section))],
-    columns=['Ticker','Date', 'Headline']
-)
-
-# Fix the first two dates (add 2025)
-#df_collection.loc[0:1, 'Date'] = df_collection.loc[0:1, 'Date'] + " 2025"
-
-#Additional News
-
 correlation_sentiment = sentiment_df.groupby(['date']).mean(numeric_only=True)
 
 merged_data1 = pd.merge(sentiment_df, modeling_base_data, left_index=True, right_index=True, how='inner')
