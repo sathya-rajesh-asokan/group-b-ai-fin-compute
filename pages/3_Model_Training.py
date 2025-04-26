@@ -68,7 +68,7 @@ def calculate_rsi(data, period=14):
     rsi = 100 - (100 / (1 + rs))
     return rsi
 
-def calculate_bollinger_bands(data, window=20, std_dev=2):
+def calculate_bollinger_bands(data, window=3, std_dev=2):
     rolling_mean = data.rolling(window=window).mean()
     rolling_std = data.rolling(window=window).std()
     upper_band = rolling_mean + (rolling_std * std_dev)
