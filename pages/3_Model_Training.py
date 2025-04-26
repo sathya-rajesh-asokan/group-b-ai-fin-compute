@@ -24,7 +24,7 @@ st.sidebar.markdown('## Features')
 y_features = st.sidebar.multiselect("", ["1211.HK","300207.SZ","002074.SZ","300014.SZ","000100.SZ"], ["1211.HK"])
 st.sidebar.divider()
 st.sidebar.markdown('## Stock Internal Features')
-internal_features = st.sidebar.multiselect("", ["RSI","Bollinger Bands","5 Day Lagged Price"])
+internal_features = st.sidebar.multiselect("", ["RSI","5 Day Lagged Price","Bollinger Bands"])
 
 # Simple function to retrieve data from FMP
 def get_stock_data(_ticker,_start_date,_end_date, _metric):
