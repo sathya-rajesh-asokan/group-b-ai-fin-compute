@@ -206,9 +206,9 @@ model_results_explanation_1.markdown("#### What does the value of R² mean?")
 model_results_explanation_2.markdown("R² (R-squared) is a statistical measure that represents the proportion of the variance for a dependent variable that's explained by an independent variable or variables in a regression model. In simpler terms, it indicates how well the independent variables explain the variability of the dependent variable. A higher R² value (closer to 1) suggests a better fit of the model to the data, while a lower R² value (closer to 0) indicates that the model does not explain much of the variability.")
 
 
-st.write(f"Mean Squared Error (MSE): {mse:.4f}")
-st.write(f"Root Mean Squared Error (RMSE): {rmse:.4f}")
-st.write(f"R-squared (R2): {r2:.4f}")
+#st.write(f"Mean Squared Error (MSE): {mse:.4f}")
+#st.write(f"Root Mean Squared Error (RMSE): {rmse:.4f}")
+#st.write(f"R-squared (R2): {r2:.4f}")
 
 # Residual Analysis
 residuals = y_test - y_pred
