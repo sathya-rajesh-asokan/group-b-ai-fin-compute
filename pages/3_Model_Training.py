@@ -13,14 +13,18 @@ from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.linear_model import Ridge, Lasso
 import seaborn as sns
 
-st.markdown("# Model Training and Results based on Linear Regression")
+st.markdown("# Model Training and Analysis")
+st.sidebar.markdown('## Simulation Date')
+end_date = st.sidebar.date_input("", value="today")
 st.sidebar.markdown('## Dependant Stock')
 st.sidebar.markdown('300750.SZ')
 st.sidebar.write("This is the stock you want to predict")
 st.sidebar.divider()
 st.sidebar.markdown('## Features')
-st.sidebar.markdown('- Adjusted Close Price of 1211.HK')
-
+y_features = st.sidebar.multiselect("", ["1211.HK","300207.SZ","002074.SZ","300014.SZ","000100.SZ"], ["1211.HK"])
+st.sidebar.divider()
+st.sidebar.markdown('## Stock Internal Features')
+internal_features = st.sidebar.multiselect("", ["RSI","Bollinger Bands"])
 
 # Simple function to retrieve data from FMP
 def get_stock_data(_ticker,_start_date,_end_date, _metric):
@@ -72,10 +76,10 @@ def calculate_bollinger_bands(data, window=20, std_dev=2):
     return upper_band, lower_band
 
 x_ticker = {'ticker': '300750.SZ', 'measure':'Adjusted Close Price'}
+y_tickers = []
+for y_feature in y_features:
+  y_tickers.append({'ticker':y_feature,'measure':'Adjusted Close Price'})
 
-y_tickers = [{'ticker':'1211.HK','measure':'Adjusted Close Price'}]
-
-end_date = datetime.now()
 start_date = end_date - timedelta(days=90)
 
 modeling_base_data = get_stock_data(x_ticker['ticker'], start_date, end_date, x_ticker['measure'])
@@ -88,26 +92,27 @@ for ticker in y_tickers:
         modeling_base_data[ticker['ticker'] + '_adjClose'] = modeling_base_data[ticker['ticker'] + '_adjClose'].ffill()
         modeling_base_data[ticker['ticker'] + '_adjClose'] = modeling_base_data[ticker['ticker'] + '_adjClose'].fillna(0)
 
-# Display the DataFrame as a table in Streamlit
-st.markdown("### Modeling Base Data")
-st.dataframe(modeling_base_data.head())
-
 # Feature Scaling
 scaler = StandardScaler()
 scaled_modeling_base_data = scaler.fit_transform(modeling_base_data)
 
 modeling_base_data = pd.DataFrame(scaled_modeling_base_data, columns=modeling_base_data.columns, index=modeling_base_data.index)
 
+model_results_title = st.empty()
+model_results = st.empty()
+model_results_explanation_1 = st.empty()
+model_results_explanation_2 = st.empty()
 # Visualizing Stock Trends
 plt.figure(figsize=(12, 6))
 for col in modeling_base_data.columns:
     plt.plot(modeling_base_data.index, modeling_base_data[col], label=col)
-plt.title("Scaled Adjusted Closing Prices of Tech Stocks")
+plt.title("Scaled Adjusted Closing Prices of the Stocks")
 plt.xlabel("Date")
 plt.ylabel("Scaled Adjusted Closing Price")
 plt.legend()
-
 st.pyplot(plt)
+st.write("#### Why use Scaled Adjusted Closing Prices?")
+st.write("The adjusted closing price is a stock's closing price after accounting for all applicable splits and dividend distributions. It provides a more accurate reflection of the stock's value over time, especially for long-term analysis. By scaling these prices, we can better visualize and compare trends across different stocks, making it easier to identify patterns and correlations.")
 
   # Correlation Matrix
 correlation_matrix = modeling_base_data.corr()
@@ -119,6 +124,8 @@ plt.xticks(tick_marks, correlation_matrix.columns, rotation=45)
 plt.yticks(tick_marks, correlation_matrix.columns)
 plt.title("Correlation Matrix of External features")
 st.pyplot(plt)
+st.write("#### Why use Correlation Matrix?")
+st.write("A correlation matrix is a table that shows the correlation coefficients between many variables. Each cell in the table displays the correlation between two variables. The value ranges from -1 to 1, where -1 indicates a strong negative correlation, 0 indicates no correlation, and 1 indicates a strong positive correlation. This helps in understanding the relationships between different stocks and can guide investment decisions.")
 
 # Stock price trends
 for i in [3, 10]:
@@ -130,21 +137,23 @@ plt.plot(modeling_base_data[x_ticker['ticker'] + '_adjClose'], label=x_ticker['t
 for i in [3, 10]:
   plt.plot(modeling_base_data[x_ticker['ticker'] + '_' + str(i) + 'MA'], label=x_ticker['ticker'] + '_' + str(i) + 'MA')
 
+if 'RSI' in internal_features:
+  modeling_base_data[f"{x_ticker['ticker']}_RSI"] = calculate_rsi(modeling_base_data[f"{x_ticker['ticker']}_adjClose"]).bfill()
+elif 'Bollinger Bands' in internal_features:
+  modeling_base_data[f"{x_ticker['ticker']}_BB_Upper"], modeling_base_data[f"{x_ticker['ticker']}_BB_Lower"] = calculate_bollinger_bands(modeling_base_data[f"{x_ticker['ticker']}_adjClose"])
+  modeling_base_data[f"{x_ticker['ticker']}_BB_Upper"], modeling_base_data[f"{x_ticker['ticker']}_BB_Lower"] = modeling_base_data[f"{x_ticker['ticker']}_BB_Upper"], modeling_base_data[f"{x_ticker['ticker']}_BB_Lower"].bfill()
 
-#modeling_base_data[f"{x_ticker['ticker']}_RSI"] = calculate_rsi(modeling_base_data[f"{x_ticker['ticker']}_adjClose"]).bfill()
-#modeling_base_data[f"{x_ticker['ticker']}_BB_Upper"], modeling_base_data[f"{x_ticker['ticker']}_BB_Lower"] = calculate_bollinger_bands(modeling_base_data[f"{x_ticker['ticker']}_adjClose"])
-#modeling_base_data[f"{x_ticker['ticker']}_BB_Upper"], modeling_base_data[f"{x_ticker['ticker']}_BB_Lower"] = modeling_base_data[f"{x_ticker['ticker']}_BB_Upper"], modeling_base_data[f"{x_ticker['ticker']}_BB_Lower"].bfill()
 for i in range(1, 6):  # Creating lagged features for up to 5 days
     modeling_base_data[f"{x_ticker['ticker']}_Lagged_adjClose_{i}_days"] = modeling_base_data[f"{x_ticker['ticker']}_adjClose"].shift(i).bfill()
-
-
 
 # Lagged Features (Past Prices)
 for ticker in y_tickers:
     if ticker['measure'] == 'Adjusted Close Price':
-        #modeling_base_data[f"{ticker['ticker']}_RSI"] = calculate_rsi(modeling_base_data[f"{ticker['ticker']}_adjClose"]).bfill()
-        #modeling_base_data[f"{ticker['ticker']}_BB_Upper"], modeling_base_data[f"{ticker['ticker']}_BB_Lower"] = calculate_bollinger_bands(modeling_base_data[f"{ticker['ticker']}_adjClose"])
-        #modeling_base_data[f"{ticker['ticker']}_BB_Upper"], modeling_base_data[f"{ticker['ticker']}_BB_Lower"] = modeling_base_data[f"{ticker['ticker']}_BB_Upper"], modeling_base_data[f"{ticker['ticker']}_BB_Lower"].bfill()
+        if 'RSI' in internal_features:
+          modeling_base_data[f"{ticker['ticker']}_RSI"] = calculate_rsi(modeling_base_data[f"{ticker['ticker']}_adjClose"]).bfill()
+        elif 'Bollinger Bands' in internal_features:
+          modeling_base_data[f"{ticker['ticker']}_BB_Upper"], modeling_base_data[f"{ticker['ticker']}_BB_Lower"] = calculate_bollinger_bands(modeling_base_data[f"{ticker['ticker']}_adjClose"])
+          modeling_base_data[f"{ticker['ticker']}_BB_Upper"], modeling_base_data[f"{ticker['ticker']}_BB_Lower"] = modeling_base_data[f"{ticker['ticker']}_BB_Upper"], modeling_base_data[f"{ticker['ticker']}_BB_Lower"].bfill()
         for i in range(1, 6):  # Creating lagged features for up to 5 days
             modeling_base_data[f"{ticker['ticker']}_Lagged_adjClose_{i}_days"] = modeling_base_data[f"{ticker['ticker']}_adjClose"].shift(i).bfill()
 
@@ -153,33 +162,7 @@ modeling_base_data['Month'] = modeling_base_data.index.month
 modeling_base_data['Year'] = modeling_base_data.index.year
 
 
-
-plt.title("300750.SZ Scaled Adjusted Closing Price with Moving Averages")
-plt.xlabel("Date")
-plt.ylabel("Scaled Adjusted Closing Price")
-plt.legend()
-st.pyplot(plt)
-
-# Analyzing Relationships
-for ticker in y_tickers:
-    plt.figure(figsize=(10, 6))
-    if ticker['measure'] == 'Adjusted Close Price':
-        plt.scatter(modeling_base_data[x_ticker['ticker'] + '_adjClose'], modeling_base_data[ticker['ticker'] + '_adjClose'])
-        plt.title(f"Scatter Plot: {x_ticker['ticker']} vs. {ticker['ticker']} Scaled Adjusted Closing Prices")
-        plt.xlabel(x_ticker['ticker'])
-        plt.ylabel(ticker['ticker'])
-    st.pyplot(plt)
-
-
-
-# Distributions
-plt.figure(figsize=(10, 6))
-plt.hist(modeling_base_data[x_ticker['ticker'] + '_adjClose'], bins=30)
-plt.title(f"Distribution of {x_ticker['ticker']} Scaled Adjusted Closing Prices")
-plt.xlabel("Scaled Adjusted Closing Price")
-plt.ylabel("Frequency")
-st.pyplot(plt)
-
+# some logic here
 target = modeling_base_data[f"{x_ticker['ticker'] + '_adjClose'}"].shift(-1).ffill()
 
 # Features (excluding the target stock's current day's data)
@@ -206,6 +189,21 @@ y_pred = model.predict(X_test.values)
 mse = mean_squared_error(y_test, y_pred)
 rmse = np.sqrt(mse)
 r2 = r2_score(y_test, y_pred)
+
+model_results_title.markdown(
+    f"<h2 style='text-align: center; color: #4CAF50;'>Model Performance Metrics</h2>",
+    unsafe_allow_html=True
+)
+model_results.markdown(
+    f"<div style='display: flex; justify-content: space-between; font-size: 18px;'>"
+    f"<span><strong>Mean Squared Error (MSE):</strong> {mse:.4f}</span>"
+    f"<span><strong>R-squared (R²):</strong> {r2:.4f}</span>"
+    f"</div>",
+    unsafe_allow_html=True
+)
+model_results_explanation_1.markdown("#### What does the value of R² mean?")
+model_results_explanation_2.markdown("R² (R-squared) is a statistical measure that represents the proportion of the variance for a dependent variable that's explained by an independent variable or variables in a regression model. In simpler terms, it indicates how well the independent variables explain the variability of the dependent variable. A higher R² value (closer to 1) suggests a better fit of the model to the data, while a lower R² value (closer to 0) indicates that the model does not explain much of the variability.")
+
 
 st.write(f"Mean Squared Error (MSE): {mse:.4f}")
 st.write(f"Root Mean Squared Error (RMSE): {rmse:.4f}")
@@ -321,22 +319,26 @@ for eachDay in range(1, iterations_to_predict + 1):
 
     prediction_total_data = pd.concat([prediction_total_data, new_row], axis=0)
     prediction_total_data = prediction_total_data.sort_index(ascending=False)
+    prediction_total_data = prediction_total_data.bfill()
 
     for i in [3, 10]:
       prediction_total_data[x_ticker['ticker'] + '_' + str(i) + 'MA'] = prediction_total_data[x_ticker['ticker'] + '_adjClose'].rolling(window=i).mean().bfill()
 
-
-    #prediction_total_data[f"{x_ticker['ticker']}_RSI"] = calculate_rsi(prediction_total_data[f"{x_ticker['ticker']}_adjClose"]).bfill()
-    #prediction_total_data[f"{x_ticker['ticker']}_BB_Upper"], prediction_total_data[f"{x_ticker['ticker']}_BB_Lower"] = calculate_bollinger_bands(prediction_total_data[f"{x_ticker['ticker']}_adjClose"])
-    #prediction_total_data[f"{x_ticker['ticker']}_BB_Upper"], prediction_total_data[f"{x_ticker['ticker']}_BB_Lower"] = prediction_total_data[f"{x_ticker['ticker']}_BB_Upper"], prediction_total_data[f"{x_ticker['ticker']}_BB_Lower"].bfill()
+    if 'RSI' in internal_features:
+      prediction_total_data[f"{x_ticker['ticker']}_RSI"] = calculate_rsi(prediction_total_data[f"{x_ticker['ticker']}_adjClose"]).bfill()
+    elif 'Bollinger Bands' in internal_features:
+      prediction_total_data[f"{x_ticker['ticker']}_BB_Upper"], prediction_total_data[f"{x_ticker['ticker']}_BB_Lower"] = calculate_bollinger_bands(prediction_total_data[f"{x_ticker['ticker']}_adjClose"])
+      prediction_total_data[f"{x_ticker['ticker']}_BB_Upper"], prediction_total_data[f"{x_ticker['ticker']}_BB_Lower"] = prediction_total_data[f"{x_ticker['ticker']}_BB_Upper"], prediction_total_data[f"{x_ticker['ticker']}_BB_Lower"].bfill()
     for i in range(1, 6):  # Creating lagged features for up to 5 days
       prediction_total_data[f"{x_ticker['ticker']}_Lagged_adjClose_{i}_days"] = prediction_total_data[f"{x_ticker['ticker']}_adjClose"].shift(i).bfill()
 
     for ticker in y_tickers:
       if ticker['measure'] == 'Adjusted Close Price':
-        #prediction_total_data[f"{ticker['ticker']}_RSI"] = calculate_rsi(prediction_total_data[f"{ticker['ticker']}_adjClose"]).bfill()
-        #prediction_total_data[f"{ticker['ticker']}_BB_Upper"], prediction_total_data[f"{ticker['ticker']}_BB_Lower"] = calculate_bollinger_bands(prediction_total_data[f"{ticker['ticker']}_adjClose"])
-        #prediction_total_data[f"{ticker['ticker']}_BB_Upper"], prediction_total_data[f"{ticker['ticker']}_BB_Lower"] = prediction_total_data[f"{ticker['ticker']}_BB_Upper"], prediction_total_data[f"{ticker['ticker']}_BB_Lower"].bfill()
+        if 'RSI' in internal_features:
+          prediction_total_data[f"{ticker['ticker']}_RSI"] = calculate_rsi(prediction_total_data[f"{ticker['ticker']}_adjClose"]).bfill()
+        elif 'Bollinger Bands' in internal_features:
+          prediction_total_data[f"{ticker['ticker']}_BB_Upper"], prediction_total_data[f"{ticker['ticker']}_BB_Lower"] = calculate_bollinger_bands(prediction_total_data[f"{ticker['ticker']}_adjClose"])
+          prediction_total_data[f"{ticker['ticker']}_BB_Upper"], prediction_total_data[f"{ticker['ticker']}_BB_Lower"] = prediction_total_data[f"{ticker['ticker']}_BB_Upper"], prediction_total_data[f"{ticker['ticker']}_BB_Lower"].bfill()
         prediction_total_data.bfill()
         for i in range(1, 6):  # Creating lagged features for up to 5 days
             prediction_total_data[f"{ticker['ticker']}_Lagged_adjClose_{i}_days"] = prediction_total_data[f"{ticker['ticker']}_adjClose"].shift(i).bfill()
