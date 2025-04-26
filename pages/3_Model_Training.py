@@ -218,6 +218,9 @@ plt.xlabel("Actual Values")
 plt.ylabel("Residuals")
 plt.title("Residual Plot")
 st.pyplot(plt)
+st.markdown("#### Why use Residual Analysis?")
+st.markdown("Residual analysis helps in diagnosing the fit of a regression model. By examining the residuals (the differences between observed and predicted values), we can identify patterns that suggest whether the model is appropriate or if there are issues such as non-linearity, heteroscedasticity, or outliers. A good model should have residuals that are randomly scattered around zero, indicating that the model has captured all systematic information in the data.")
+
 
 # Regularization Techniques (Ridge and Lasso)
 ridge_model = Ridge(alpha=1.0)  # Example alpha value
